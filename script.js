@@ -26,11 +26,17 @@ function operate(op1, op2, operand) {
     }
 };
 
-sequence = [];
+let sequence = [];
 
 function updateDisplay() {
     const display = document.querySelector('.display');
     display.textContent = sequence.join('');
+}
+
+function clearDisplay() {
+    sequence = [];
+    const display = document.querySelector('.display');
+    display.textContent = '';
 }
 
 function setupNumpad() {
@@ -47,10 +53,83 @@ function setupNumpad() {
     }
 };
 
-function setupPlus() {
-    
+function setupOps() {
+    const ops = ['+', '-', '*', '/'];
+    const operators = document.querySelector('.operators');
+    for (let i = 0; i < 4; i++) {
+        const op = document.createElement('button');
+        op.textContent = ops[i];
+        operators.appendChild(op);
+        op.addEventListener('click', () => {
+            sequence.push(ops[i]);
+            updateDisplay();
+        });
+    }
 };
 
+function setupClear() {
+    const calculator = document.querySelector('.calculator');
+    const clear = document.createElement('button');
+    clear.textContent = 'clear';
+    calculator.appendChild(clear);
+    clear.addEventListener('click', () => {
+        clearDisplay();
+    });
+};
+
+function combineNum(start) {
+    let end = start;
+    let total = 0;
+    while (typeof(sequence[end]) == "number") {
+        end++;
+    }
+    if (start == end) {
+        return;
+    }
+    for (let i = end-1, j = 0; i >= start; i--, j++) {
+        total += sequence[i] * Math.pow(10, j);
+    }
+    sequence.splice(start, end-start, total);
+}
+
+function setupEquals() {
+    const operators = document.querySelector('.operators');
+    const equals = document.createElement('button');
+    equals.textContent = '=';
+    equals.addEventListener('click', () => {
+
+        let l = 0;
+        let r = 2;
+        let m = 1;
+
+        let valid_ops = ['+', '-', '*', '/'];
+
+        while (sequence.length > 2) {
+            combineNum(l);
+            combineNum(r);
+            let op1 = sequence[l];
+            let op2 = sequence[r];
+            let operand = sequence[m];
+
+            if (typeof(op1) != "number" || typeof(op2) != "number") {
+                clearDisplay();
+                return;
+            }
+            if (!valid_ops.includes(operand)) {
+                clearDisplay();
+                return;
+            }
+            
+            let result = operate(op1, op2, operand);
+            sequence.splice(0, 3, result);
+        }
+
+        updateDisplay();
+    });
+    operators.appendChild(equals);
+}
+
 setupNumpad();
-
-
+setupOps();
+setupClear();
+setupEquals();
